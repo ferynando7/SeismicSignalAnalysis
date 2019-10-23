@@ -26,9 +26,9 @@ hr = 1.0
 
 tzero = trace.stats.starttime
 
-for i in range(0,23,1):
+for i in range(0,71,1):
     auxTrace = trace.copy()
-    cutData = auxTrace.trim(tzero+(hr+i)*3600,tzero+((hr+i+1)*3600))
+    cutData = auxTrace.trim(tzero+(hr+i)*1200,tzero+((hr+i+1)*1200))
     plotBandSpec(cutData)
 
 
