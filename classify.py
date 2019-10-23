@@ -32,7 +32,7 @@ tzero = trace.stats.starttime
 traces = []
 
 maxTime = 24*60*60-interval
-maxTime = 50 #for testing
+#maxTime = 50 #for testing
 
 fileToSave = open('data.txt', 'w')
 
