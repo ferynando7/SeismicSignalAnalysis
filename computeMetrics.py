@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import obspy
 from obspy.signal.util import next_pow_2
-from obspy.signal.freqattributes import central_frequency_unwindowed, spectrum
-
+from obspy.signal.freqattributes import central_frequency_unwindowed, spectrum, welch
+from obspy.signal.filter import bandpass
 from pyrocko import util
 from pyrocko.gui import marker as pm
 
@@ -21,9 +21,10 @@ def getMetrics(trace):
     median = np.median(data) 
     stdv = data.std()
     maximum = np.amax(data)
-    repFreq = central_frequency_unwindowed(data,1)
-#    spec = spectrum(data,np.hamming(len(data)), next_pow_2(len(data)))
-    return [mean, median, stdv, maximum, repFreq]
+    repFreq = central_frequency_unwindowed(data,df)
+    filtered = bandpass(data, 0.01, 1.5625, df)
+    sumEnergy = np.sum(welch(filtered, np.hamming(len(data)), next_pow_2(len(data))))
+    return [mean, median, stdv, maximum, repFreq, sumEnergy]
 ##########################################
 
 # set input file (which day to work on and which channel)
@@ -32,6 +33,7 @@ stream = obspy.read(filename)
 
 trace = stream[0]
 
+df = 50 #sampling rate
 interval = 30 #seconds for window width
 overlap = 15
 
