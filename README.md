@@ -1,3 +1,5 @@
-TO RUN CLASSIFY.PY:
+To copy the file structure of YACHAY folder please type this command:
+    find . -type d > dirs.txt
 
-    python classify.py /path/to/data/file /path/to/markers/file 
+To create the file structure in the folder you wish:
+    xargs mkdir -p < dirs.txt
