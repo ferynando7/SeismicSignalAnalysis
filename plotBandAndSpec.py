@@ -20,29 +20,31 @@ trace = stream[0]
 arrTimes = [3600,60,1]
 
 try:
-    # start = map(int,sys.argv[2].split(':'))
-    # startInSec = sum(a*b for a,b in zip(arrTimes, start))
+    start = map(int,sys.argv[2].split(':'))
+    startInSec = sum(a*b for a,b in zip(arrTimes, start))
 
-    startInSec = 1000
+    end = map(int,sys.argv[3].split(':'))
+    endInSec = sum(a*b for a,b in zip(arrTimes,end))
 
-    # end = map(int,sys.argv[3].split(':'))
-    # endInSec = sum(a*b for a,b in zip(arrTimes,end))
-
-    endInSec = 2000
-    print("Hello")
-
-    auxTrace = trace.copy()
-    cutData = auxTrace.trim(startInSec,endInSec)
-    plotBandSpec(cutData)
+   
 except:
     sys.exit("Times may not have been inserted or the format is not correct.")
+
+
+
+tzero = trace.stats.starttime
+
+auxTrace = trace.copy()
+cutData = auxTrace.trim(tzero + startInSec, tzero + endInSec)
+plotBandSpec(cutData, mode = 'plot')
+
+
 # Make a plot of the whole day of data
 #trace.plot(type='dailyplot', outfile="dailyplot")
 
 # set hour of the day (1-23) to work with
 # hr = 1.0
 
-# tzero = trace.stats.starttime
 
 # for i in range(0,71,1):
 #     auxTrace = trace.copy()
