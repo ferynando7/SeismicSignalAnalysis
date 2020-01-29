@@ -11,6 +11,9 @@ if len(sys.argv) < 2:
 if len(sys.argv) < 4:
     sys.exit("Start time and end time must introduced. The format is hh:mm:ss")
 
+if len(sys.argv) < 5:
+    sys.exit("Highpass and/or lowpass must be specified")
+
 # set input file (which day to work on and which channel)
 filename = sys.argv[1]
 stream = obspy.read(filename)
@@ -36,7 +39,14 @@ tzero = trace.stats.starttime
 
 auxTrace = trace.copy()
 cutData = auxTrace.trim(tzero + startInSec, tzero + endInSec)
-plotBandSpec(cutData, mode = 'plot')
+
+[high,low] = sys.argv[4].split('-')
+if high == 'l':
+    plotBandSpec(cutData, mode = 'plot', low = float(low))
+elif high == 'h':
+    plotBandSpec(cutData, mode = 'plot', high = float(low))
+else:
+    plotBandSpec(cutData, mode = 'plot', low=float(low), high= float(high))
 
 
 # Make a plot of the whole day of data

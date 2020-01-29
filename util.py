@@ -8,14 +8,14 @@ from obspy.signal.freqattributes import bandwidth
 # There are two modes: save and plot. "save" mode is default and will save the 
 # figure whereas "plot" mode will plot the figure in running time.
 
-def plotBandSpec(trace, mode='save'):
+def plotBandSpec(trace, mode='save',low=24.99, high=0.001):
     #copy the data
     traceCopy = trace.copy()
 
     #demean, detrend, bandpass filter
     trace.detrend('demean')
     trace.detrend('linear')
-    trace.filter('bandpass', freqmin=0.1, freqmax=20.0, corners=2, zerophase=True)
+    trace.filter('bandpass', freqmin=high, freqmax=low, corners=2, zerophase=True)
 
     # Plot the filtered data and spectrogram
     t = np.arange(0, trace.stats.npts / trace.stats.sampling_rate, trace.stats.delta)
