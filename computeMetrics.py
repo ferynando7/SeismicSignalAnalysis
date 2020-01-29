@@ -16,11 +16,14 @@ if len(sys.argv) < 2:
 
 ##########################################
 def getMetrics(trace):
+
     data = trace.data
     mean = data.mean()
     median = np.median(data) 
     stdv = data.std()
     maximum = np.amax(data)
+    trace.taper(type='hamming',max_percentage=0.05, max_length=5)
+    data = trace.data
     repFreq = central_frequency_unwindowed(data,df)
     filtered = bandpass(data, 0.01, 1.5625, df)
     sumEnergy = np.sum(welch(filtered, np.hamming(len(data)), next_pow_2(len(data))))
@@ -32,6 +35,8 @@ filename = sys.argv[1]
 stream = obspy.read(filename)
 
 trace = stream[0]
+trace.detrend('demean')
+trace.detrend('linear')
 
 df = 50 #sampling rate
 interval = 30 #seconds for window width
@@ -39,7 +44,6 @@ overlap = 15
 
 tzero = trace.stats.starttime
 
-traces = []
 
 maxTime = 24*60*60-interval
 
