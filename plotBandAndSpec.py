@@ -3,19 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import obspy
 
-from util import plotBandSpec
+from util import plotBandSpec, dict, formatDay
 
 if len(sys.argv) < 2:
-    sys.exit("Filename was not introduced")
+    sys.exit("Day (1-119) was not introduced")
 
-if len(sys.argv) < 4:
-    sys.exit("Start time and end time must introduced. The format is hh:mm:ss")
+if len(sys.argv) < 3:
+    sys.exit("Station and channel was not introduced")
 
 if len(sys.argv) < 5:
-    sys.exit("Highpass and/or lowpass must be specified")
+    sys.exit("Start time and end time must introduced. The format is hh:mm:ss")
+
+#if len(sys.argv) < 6:
+#    sys.exit("Highpass and/or lowpass must be specified")
 
 # set input file (which day to work on and which channel)
-filename = sys.argv[1]
+day = int(sys.argv[1])
+
+dayCMD = formatDay(day)
+
+filename = dict[int(sys.argv[2])] + dayCMD
 stream = obspy.read(filename)
 
 trace = stream[0]
@@ -23,10 +30,10 @@ trace = stream[0]
 arrTimes = [3600,60,1]
 
 try:
-    start = map(int,sys.argv[2].split(':'))
+    start = map(int,sys.argv[3].split(':'))
     startInSec = sum(a*b for a,b in zip(arrTimes, start))
 
-    end = map(int,sys.argv[3].split(':'))
+    end = map(int,sys.argv[4].split(':'))
     endInSec = sum(a*b for a,b in zip(arrTimes,end))
 
    
@@ -40,13 +47,18 @@ tzero = trace.stats.starttime
 auxTrace = trace.copy()
 cutData = auxTrace.trim(tzero + startInSec, tzero + endInSec)
 
-[high,low] = sys.argv[4].split('-')
-if high == 'l':
-    plotBandSpec(cutData, mode = 'plot', low = float(low))
-elif high == 'h':
-    plotBandSpec(cutData, mode = 'plot', high = float(low))
-else:
-    plotBandSpec(cutData, mode = 'plot', low=float(low), high= float(high))
+try:
+    [high,low] = sys.argv[5].split('-')
+    if high == 'l':
+        plotBandSpec(cutData, mode = 'plot', low = float(low))
+    elif high == 'h':
+        plotBandSpec(cutData, mode = 'plot', high = float(low))
+    else:
+        plotBandSpec(cutData, mode = 'plot', low=float(low), high= float(high))
+
+except:
+    plotBandSpec(cutData, mode = 'plot')
+
 
 
 # Make a plot of the whole day of data
