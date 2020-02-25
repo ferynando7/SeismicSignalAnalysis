@@ -2,8 +2,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import obspy
-from obspy.signal.freqattributes import bandwidth
-from util import plotBandSpec, dict, formatDay
+#from obspy.signal.freqattributes import bandwidth
+from util import plotBandSpec, dict, formatDay, bandwidth
 from obspy.signal.util import smooth
 
 
@@ -62,13 +62,6 @@ try:
     else:
         plotBandSpec(cutData, mode = 'plot', low=float(low), high= float(high))
 except:
-    smoothie = 3
-    fk = [-2,-1,0,1,2]
-    data = np.transpose(np.array([cutData.data]))
-    print(data.shape)
-    print (type(data))
-    #bw = bandwidth(data, df, smoothie, fk)
-    #print(bw)
     plotBandSpec(cutData, mode = 'plot')
 
 
