@@ -12,20 +12,27 @@ from pyrocko.gui import marker as pm
 
 from markers import lookPattern
 
-if len(sys.argv) < 3:
-    if len(sys.argv) < 2:
-        sys.exit("Filenames for data and markers were not introduced.")
-    else:
-        sys.exit("Filename for markers was not introduced")
+
+###Command line arguments
+# 1: number of the day
+# 2: number of the marker
+
+
+if len(sys.argv) < 2:
+    sys.exit("Day number and markers number were not introduced.")
 
 # set input file (which day to work on and which channel)
-filename = sys.argv[1]
+day = sys.argv[1]
+dayCMD = formatDay(day)
+filename = dict[int(sys.argv[2])] + dayCMD
+
 stream = obspy.read(filename)
-markers = pm.load_markers(sys.argv[2])
+markers = pm.load_markers("../Markers/"+dayCMD+".mk")
 
 trace = stream[0]
 
-interval = 5 #seconds for window width
+interval = 30 #seconds for window width
+overlap = 15
 
 tzero = trace.stats.starttime
 
@@ -34,13 +41,17 @@ traces = []
 maxTime = 24*60*60-interval
 #maxTime = 50 #for testing
 
-fileToSave = open('data.txt', 'w')
+#fileToSave = open(, 'w')
 
-for i in range(0, maxTime,interval):
+lastColumn = []
+
+for i in range(0, maxTime,overlap):
     auxTrace = trace.copy()
     cutData = auxTrace.trim(tzero+i,tzero+i+interval)
-    addClass = np.append(cutData.data, lookPattern(cutData, markers))
-    np.savetxt(fileToSave, addClass ,newline=" ")
-    fileToSave.write("\n")
+    addClass = np.append(lastColumn, lookPattern(cutData, markers))
     #print(np.append(cutData.data, lookPattern(cutData, markers))) #If you wint to print activate this
+
+
+
+
 fileToSave.close

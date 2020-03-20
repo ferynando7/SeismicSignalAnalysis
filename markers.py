@@ -5,11 +5,11 @@ from pyrocko.example import get_example_data
 
 
 def lookPattern(trace, markers):
-    kind = -1
+    label = -1
+    i = 0
     for marker in markers:
-        if(trace.stats.starttime >= marker.tmin):
-            kind = marker.kind
-        else:
-            break
-    
-    return kind
+        if(trace.stats.starttime >= marker.tmin and trace.stats.starttime <= marker.tmax):
+            label = marker.kind
+        elif(trace.stats.endtime >= marker.tmin and trace.stats.endtime <= marker.tmax):
+            label = marker.kind
+    return label

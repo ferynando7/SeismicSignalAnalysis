@@ -6,7 +6,8 @@ from obspy.signal.util import next_pow_2
 from obspy.signal.freqattributes import central_frequency_unwindowed, spectrum, welch
 from obspy.signal.filter import bandpass
 from util import dict, formatDay
-
+from pyrocko.gui import marker as pm
+from markers import lookPattern
 
 
 
@@ -70,18 +71,40 @@ def processFile(filename):
     return metrics
 ##########################################
 
-if len(sys.argv) < 2:
-    sys.exit("Day was not introduced")
+####################################
+def computeClasess(filename, markers):
+    stream = obspy.read(filename)
+    trace = stream[0]
+    maxTime = 24*60*60-interval
+    tzero = trace.stats.starttime
+    lastColumn = []
 
+
+
+    for i in range(0, maxTime,overlap):
+        auxTrace = trace.copy()
+        cutData = auxTrace.trim(tzero+i,tzero+i+interval)
+        lastColumn = np.append(lastColumn, lookPattern(cutData, markers))
+    return lastColumn
+
+
+if not __debug__ :
+    if len(sys.argv) < 2:
+        sys.exit("Day was not introduced")
+    day = formatDay(int(sys.argv[1]))
+else:
+    day = "001"
 
 # set input file (which day to work on and which channel)
-day = formatDay(int(sys.argv[1]))
+
 
 df = 50 #sampling rate
 interval = 30 #seconds for window width
 overlap = 15
 
-header = 'MEAN_E,MEDIAN_E,STDV_E,MAXIMUM_E,REP_FREQ_E,SUM_ENERGY_E,ENERGY_PREV_E,ENERGY_NEXT_E,MEAN_N,MEDIAN_N,STDV_N,MAXIMUM_N,REP_FREQ_N,SUM_ENERGY_N,ENERGY_PREV_N,ENERGY_NEXT_N,MEAN_Z,MEDIAN_Z,STDV_Z,MAXIMUM_Z,REP_FREQ_Z,SUM_ENERGY_Z,ENERGY_PREV_Z,ENERGY_NEXT_Z'
+markers = pm.load_markers("../Markers/"+day+".pf")
+
+header = 'MEAN_E,MEDIAN_E,STDV_E,MAXIMUM_E,REP_FREQ_E,SUM_ENERGY_E,ENERGY_PREV_E,ENERGY_NEXT_E,MEAN_N,MEDIAN_N,STDV_N,MAXIMUM_N,REP_FREQ_N,SUM_ENERGY_N,ENERGY_PREV_N,ENERGY_NEXT_N,MEAN_Z,MEDIAN_Z,STDV_Z,MAXIMUM_Z,REP_FREQ_Z,SUM_ENERGY_Z,ENERGY_PREV_Z,ENERGY_NEXT_Z, CLASS'
 
 filenames = filenames = [prefix+day for prefix in dict.values()]
 
@@ -89,51 +112,56 @@ filenames = filenames = [prefix+day for prefix in dict.values()]
 station1 = processFile(filenames[0])
 station2 = processFile(filenames[1])
 station3 = processFile(filenames[2])
-
+classes = computeClasess(filenames[0], markers)
+classes = np.reshape(classes,(-1,1))
 bmas = np.hstack((station1,station2,station3))
+
+
+complete = np.append(bmas, classes,axis=1)
+
 
 outputFile = "../Windowed/BMAS." + day
 fileToSave = open(outputFile+'.csv', 'w')
-np.savetxt(fileToSave, bmas, delimiter=',', header=header)
+np.savetxt(fileToSave, complete, delimiter=',', header=header)
 fileToSave.close
 
 
-##BPAT
-station1 = processFile(filenames[3])
-station2 = processFile(filenames[4])
-station3 = processFile(filenames[5])
+# ##BPAT
+# station1 = processFile(filenames[3])
+# station2 = processFile(filenames[4])
+# station3 = processFile(filenames[5])
 
-bpat = np.hstack((station1,station2,station3))
+# bpat = np.hstack((station1,station2,station3))
 
-outputFile = "../Windowed/BPAT." + day
-fileToSave = open(outputFile+'.csv', 'w')
-np.savetxt(fileToSave, bpat, delimiter=',', header=header)
-fileToSave.close
+# outputFile = "../Windowed/BPAT." + day
+# fileToSave = open(outputFile+'.csv', 'w')
+# np.savetxt(fileToSave, bpat, delimiter=',', header=header)
+# fileToSave.close
 
 
-##BRUN
-station1 = processFile(filenames[6])
-station2 = processFile(filenames[7])
-station3 = processFile(filenames[8])
+# ##BRUN
+# station1 = processFile(filenames[6])
+# station2 = processFile(filenames[7])
+# station3 = processFile(filenames[8])
 
-brun = np.hstack((station1,station2,station3))
+# brun = np.hstack((station1,station2,station3))
 
-outputFile = "../Windowed/BRUN." + day
-fileToSave = open(outputFile+'.csv', 'w')
-np.savetxt(fileToSave, brun, delimiter=',', header=header)
-fileToSave.close
+# outputFile = "../Windowed/BRUN." + day
+# fileToSave = open(outputFile+'.csv', 'w')
+# np.savetxt(fileToSave, brun, delimiter=',', header=header)
+# fileToSave.close
 
-##BULB
-station1 = processFile(filenames[9])
-station2 = processFile(filenames[10])
-station3 = processFile(filenames[11])
+# ##BULB
+# station1 = processFile(filenames[9])
+# station2 = processFile(filenames[10])
+# station3 = processFile(filenames[11])
 
-bulb = np.hstack((station1,station2,station3))
+# bulb = np.hstack((station1,station2,station3))
 
-outputFile = "../Windowed/BULB." + day
-fileToSave = open(outputFile+'.csv', 'w')
-np.savetxt(fileToSave, bulb, delimiter=',', header=header)
-fileToSave.close
+# outputFile = "../Windowed/BULB." + day
+# fileToSave = open(outputFile+'.csv', 'w')
+# np.savetxt(fileToSave, bulb, delimiter=',', header=header)
+# fileToSave.close
 
-#metrics = processFile(filename)
+# #metrics = processFile(filename)
 
