@@ -2,8 +2,14 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import obspy
+#from obspy.signal.freqattributes import bandwidth
+from util import plotBandSpec, dict, formatDay, bandwidth
+from obspy.signal.util import smooth
 
-from util import plotBandSpec, dict, formatDay
+
+df = 50 #sampling rate
+
+
 
 if len(sys.argv) < 2:
     sys.exit("Day (1-119) was not introduced")
@@ -55,7 +61,6 @@ try:
         plotBandSpec(cutData, mode = 'plot', high = float(low))
     else:
         plotBandSpec(cutData, mode = 'plot', low=float(low), high= float(high))
-
 except:
     plotBandSpec(cutData, mode = 'plot')
 
