@@ -28,7 +28,7 @@ def getMetrics(trace):
 
 ##########################################
 
-def processFile(filename):
+def processFile(filename, markers, lastFile = False):
     stream = obspy.read(filename)
 
     trace = stream[0]
@@ -44,30 +44,44 @@ def processFile(filename):
     for i in range(0, maxTime, overlap):
         auxTrace = trace.copy()
         cutData = auxTrace.trim(tzero+i,tzero+i+interval)
-        metrics.append(getMetrics(cutData))
+        #metrics.append(getMetrics(cutData))
+        for marker in markers:
+            if(cutData.stats.starttime >= marker.tmin and cutData.stats.starttime <= marker.tmax):
+                data = cutData.data
+                if lastFile:
+                    label = marker.kind
+                    data = np.append(data,label)
+                metrics.append(data)
+            elif(cutData.stats.endtime >= marker.tmin and cutData.stats.endtime <= marker.tmax):
+                data = cutData.data
+                if lastFile:
+                    label = marker.kind
+                    data = np.append(data,label)
+                metrics.append(data)
+        
+        
 
+    # for i in range(len(metrics)):
+    #     if i == 0:
+    #         metrics[i].append(0)
+    #     else:
+    #         if metrics[i-1][5] < metrics[i][5]:
+    #             metrics[i].append(1)
+    #         elif metrics[i-1][5] > metrics[i][5]:
+    #             metrics[i].append(-1)
+    #         else:
+    #             metrics[i].append(0)
 
-    for i in range(len(metrics)):
-        if i == 0:
-            metrics[i].append(0)
-        else:
-            if metrics[i-1][5] < metrics[i][5]:
-                metrics[i].append(1)
-            elif metrics[i-1][5] > metrics[i][5]:
-                metrics[i].append(-1)
-            else:
-                metrics[i].append(0)
-
-    for i in range(len(metrics)):
-        if i == len(metrics)-1:
-            metrics[i].append(0)
-        else:
-            if metrics[i][5] < metrics[i+1][5]:
-                metrics[i].append(1)
-            elif metrics[i][5] > metrics[i-1][5]:
-                metrics[i].append(-1)
-            else:
-                metrics[i].append(0)
+    # for i in range(len(metrics)):
+    #     if i == len(metrics)-1:
+    #         metrics[i].append(0)
+    #     else:
+    #         if metrics[i][5] < metrics[i+1][5]:
+    #             metrics[i].append(1)
+    #         elif metrics[i][5] > metrics[i-1][5]:
+    #             metrics[i].append(-1)
+    #         else:
+    #             metrics[i].append(0)
     return metrics
 ##########################################
 
@@ -84,17 +98,16 @@ def computeClasess(filename, markers):
     for i in range(0, maxTime,overlap):
         auxTrace = trace.copy()
         cutData = auxTrace.trim(tzero+i,tzero+i+interval)
-        lastColumn = np.append(lastColumn, lookPattern(cutData, markers))
+        label = lookPattern(cutData, markers)
+
+        #Filtering the data to the ones that are not noise
+        lastColumn = np.append(lastColumn, label)
     return lastColumn
 
 
-if not __debug__ :
-    if len(sys.argv) < 2:
+if len(sys.argv) < 2:
         sys.exit("Day was not introduced")
-    day = formatDay(int(sys.argv[1]))
-else:
-    day = "001"
-
+day = formatDay(int(sys.argv[1]))
 # set input file (which day to work on and which channel)
 
 
@@ -104,25 +117,27 @@ overlap = 15
 
 markers = pm.load_markers("../Markers/"+day+".pf")
 
-header = 'MEAN_E,MEDIAN_E,STDV_E,MAXIMUM_E,REP_FREQ_E,SUM_ENERGY_E,ENERGY_PREV_E,ENERGY_NEXT_E,MEAN_N,MEDIAN_N,STDV_N,MAXIMUM_N,REP_FREQ_N,SUM_ENERGY_N,ENERGY_PREV_N,ENERGY_NEXT_N,MEAN_Z,MEDIAN_Z,STDV_Z,MAXIMUM_Z,REP_FREQ_Z,SUM_ENERGY_Z,ENERGY_PREV_Z,ENERGY_NEXT_Z, CLASS'
+#header = 'MEAN_E,MEDIAN_E,STDV_E,MAXIMUM_E,REP_FREQ_E,SUM_ENERGY_E,ENERGY_PREV_E,ENERGY_NEXT_E,MEAN_N,MEDIAN_N,STDV_N,MAXIMUM_N,REP_FREQ_N,SUM_ENERGY_N,ENERGY_PREV_N,ENERGY_NEXT_N,MEAN_Z,MEDIAN_Z,STDV_Z' #,MAXIMUM_Z,REP_FREQ_Z,SUM_ENERGY_Z,ENERGY_PREV_Z,ENERGY_NEXT_Z, CLASS'
 
 filenames = filenames = [prefix+day for prefix in dict.values()]
 
 ##BMAS
-station1 = processFile(filenames[0])
-station2 = processFile(filenames[1])
-station3 = processFile(filenames[2])
-classes = computeClasess(filenames[0], markers)
-classes = np.reshape(classes,(-1,1))
+station1 = processFile(filenames[0], markers)
+station2 = processFile(filenames[1], markers)
+station3 = processFile(filenames[2], markers, lastFile=True)
+#classes = computeClasess(filenames[0], markers)
+#classes = np.reshape(classes,(-1,1))
 bmas = np.hstack((station1,station2,station3))
 
 
-complete = np.append(bmas, classes,axis=1)
+#complete = np.append(bmas, classes,axis=1)
+
+#complete = complete[complete[:,-1] != -1]
 
 
-outputFile = "../Windowed/BMAS." + day
+outputFile = "../Windowed/BMAS/" + day
 fileToSave = open(outputFile+'.csv', 'w')
-np.savetxt(fileToSave, complete, delimiter=',', header=header)
+np.savetxt(fileToSave, bmas, delimiter=',')
 fileToSave.close
 
 
