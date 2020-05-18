@@ -30,12 +30,12 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 
 #Then, we'll import the CNN layers from Keras. These are the convolutional layers that will help us efficiently train on seismic data
-from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import Conv1D, MaxPooling1D, GlobalAveragePooling1D
 
 #Finally, we'll import some utilities. This will help us transform our data later
 from keras.utils import np_utils, to_categorical, plot_model
 
-
+from keras.regularizers import l2
 
 
 #width = 4504 # We expect data with 24 colums for input and 1 for output
@@ -49,6 +49,19 @@ dataframes = []  # a list to hold all the individual pandas DataFrames
 for csvfile in csvfiles:
     df = pd.read_csv(csvfile, header=None)
     dataframes.append(df)   
+
+for csvfile in csvfiles:
+    df = pd.read_csv(csvfile, header=None)
+    dataframes.append(df)   
+
+for csvfile in csvfiles:
+    df = pd.read_csv(csvfile, header=None)
+    dataframes.append(df)   
+
+for csvfile in csvfiles:
+    df = pd.read_csv(csvfile, header=None)
+    dataframes.append(df)   
+
 
 # # concatenate them all together
 data = np.concatenate(dataframes, axis=0)
@@ -92,23 +105,26 @@ model = Sequential()
 
 ######### CONVOLUTIONAL LAYER 1 and RELU
 
-model.add(Conv1D(32, 7, activation='relu', input_shape=(width,1)))
-
+#, kernel_regularizer=l2(0.001), bias_regularizer=l2(0.001)
+model.add(Conv1D(16, 7, activation='relu', input_shape=(width,1)))
+# , kernel_regularizer=l2(0.0005), bias_regularizer=l2(0.0005)
 # ######### MAX POOLING 1
-model.add(MaxPooling1D(2))
+model.add(MaxPooling1D(3))
+#model.add(Dropout(0.3))
+# # ######### CONVOLUTIONAL LAYER 2 and RELU
+model.add(Conv1D(32,7, activation='relu'))
 
-# ######### CONVOLUTIONAL LAYER 2 and RELU
-model.add(Conv1D(64,7, activation='relu'))
+# # ######### MAX POOLING 2
+#model.add(GlobalAveragePooling1D())
+model.add(MaxPooling1D(3))
+#model.add(Dropout(0.3))
 
-# ######### MAX POOLING 2
-model.add(MaxPooling1D(2))
+# # ######### CONVOLUTIONAL LAYER 3 and RELU
+model.add(Conv1D(32,7, activation='relu'))
 
-# ######### CONVOLUTIONAL LAYER 3 and RELU
-model.add(Conv1D(128,7, activation='relu'))
-
-# ######### MAX POOLING 3
-model.add(MaxPooling1D(2))
-
+# # ######### MAX POOLING 3
+model.add(MaxPooling1D(3))
+#model.add(Dropout(0.6))
 ######### FULLY CONNECTED LAYER 3
 
 # Flattening last layer
@@ -119,7 +135,7 @@ model.add(Flatten())
 model.add(Dense(200, activation='relu', input_shape=(width,)))
 
 # ######### SOFTMAX LAYER
-model.add(Dropout(0.3))
+model.add(Dropout(0.5))
 model.add(Dense(9, activation='softmax'))
 
 print(model.summary())
@@ -137,11 +153,12 @@ class_weights = class_weight.compute_class_weight('balanced'
                                                ,np.unique(classes)
                                                ,classes)
 
+print(class_weights)
 training_history = model.fit(
     x_train, 
     y_train, 
     batch_size=128, 
-    nb_epoch=100, 
+    nb_epoch=50, 
     verbose=2,
     shuffle=True,
     validation_split=0.2,
@@ -154,5 +171,16 @@ score = model.evaluate(
     x_test, 
     y_test, 
     verbose=1)
-print(model.metrics_names)
+#print(model.metrics_names)
 print(score)
+
+
+
+
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")

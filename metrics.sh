@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 echo "File 1"
 python computeMetrics.py 1

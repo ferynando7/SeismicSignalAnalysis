@@ -42,22 +42,34 @@ def processFile(filename, markers, lastFile = False):
 
     metrics = []
     for i in range(0, maxTime, overlap):
+        added = False
         auxTrace = trace.copy()
         cutData = auxTrace.trim(tzero+i,tzero+i+interval)
         #metrics.append(getMetrics(cutData))
         for marker in markers:
             if(cutData.stats.starttime >= marker.tmin and cutData.stats.starttime <= marker.tmax):
                 data = cutData.data
+                #data = getMetrics(cutData)
                 if lastFile:
                     label = marker.kind
                     data = np.append(data,label)
                 metrics.append(data)
+                added = True
             elif(cutData.stats.endtime >= marker.tmin and cutData.stats.endtime <= marker.tmax):
                 data = cutData.data
+                #data = getMetrics(cutData)
                 if lastFile:
                     label = marker.kind
                     data = np.append(data,label)
                 metrics.append(data)
+                added = True
+        if i%2000 == 0 and not added:
+            data = cutData.data
+            #data = getMetrics(cutData)
+            if lastFile:
+                label = marker.kind
+                data = np.append(data,0)
+            metrics.append(data)
         
         
 
@@ -125,8 +137,10 @@ filenames = filenames = [prefix+day for prefix in dict.values()]
 station1 = processFile(filenames[0], markers)
 station2 = processFile(filenames[1], markers)
 station3 = processFile(filenames[2], markers, lastFile=True)
+
 #classes = computeClasess(filenames[0], markers)
 #classes = np.reshape(classes,(-1,1))
+
 bmas = np.hstack((station1,station2,station3))
 
 

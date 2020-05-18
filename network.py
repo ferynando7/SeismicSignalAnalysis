@@ -34,21 +34,6 @@ sess = tf.InteractiveSession()
 
 ##### Getting the data
 
-
-
-
-
-
-
-
-# day = formatDay(int(sys.argv[1]))
-# filename = "../Windowed/BMAS/"+day+".csv"
-
-# datafile = open(filename, "r")
-# data = csv.reader(datafile, delimiter=",")
-# data = np.array(list(data))
-
-
 # the path to your csv file directory
 mycsvdir = '../Windowed/BMAS/'
 
